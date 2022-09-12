@@ -14,31 +14,50 @@ env:
   NODE_VERSION: '16.x' # set this to the node version to use (supports 8.x, 10.x, 12.x)
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: windows-latest
+
     steps:
-      - name: 'Checkout GitHub Action'
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
       - name: Setup Node ${{ env.NODE_VERSION }} Environment
         uses: actions/setup-node@v1
-        with:
+        with: |+
           node-version: ${{ env.NODE_VERSION }}
 
       - name: 'Resolve Project Dependencies Using Npm'
         shell: pwsh
-        run: |
+        run: |+
           pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
           npm install
           npm run build --if-present
           npm run test --if-present
           popd
+      
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v2
+        with:
+          name: node-app
+          path: .
+
+  deploy:
+    runs-on: windows-latest
+    needs: build
+    environment: |+
+      name: 'production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v2
+        with: |+
+          name: node-app
 
       - name: 'Run Azure Functions Action'
         uses: Azure/functions-action@v1
         id: fa
         with:
           app-name: 'stpelleg-windows-node-functionapp'
-          slot-name: 'Production'
+          slot-name: 'production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C3E4ACFBA15C4A11A62C576EFA27EC2C }}
+          publish-profile: ${{ secrets.secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C3E4ACFBA15C4A11A62C576EFA27EC2C }}
