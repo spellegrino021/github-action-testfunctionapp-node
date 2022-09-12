@@ -60,4 +60,4 @@ jobs:
           app-name: 'stpelleg-windows-node-functionapp'
           slot-name: 'production'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-          publish-profile: ${{ secrets.secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C3E4ACFBA15C4A11A62C576EFA27EC2C }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_C3E4ACFBA15C4A11A62C576EFA27EC2C }}
